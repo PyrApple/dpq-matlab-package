@@ -1,1 +1,1 @@
-david poirier-quinot (davipoir@gmail.com) matlab packages
+Set of matlab functions
