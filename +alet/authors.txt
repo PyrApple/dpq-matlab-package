@@ -1,0 +1,6 @@
+authors:
+- David Poirier-Quinot
+
+using externals by:
+- Matt Jacobson
+- Bruno Luong
