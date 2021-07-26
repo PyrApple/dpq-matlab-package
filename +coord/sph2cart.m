@@ -1,6 +1,13 @@
-function [xyz] = sph2cartVect(aed)
+function xyz = sph2cart(aed)
 
-if( size(aed, 2) ~= 3 ); error('expected Nx3 vector'); end
+% Spherical to cartesian coordinates
+% 
+% xyz = sph2cart(aed)
+% 
+% aed is azimuth (deg), elevation (deg), distance (m), xyz is cartesian
+% coordinates (m). Both are Nx3 matrices.
+
+if( size(aed, 2) ~= 3 ); error('expected Nx3 matrix'); end
 
 xyz = nan(size(aed));
 

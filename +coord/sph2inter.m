@@ -1,6 +1,13 @@
-function [aedInter] = sph2interVect(aed)
+function lpd = sph2inter(aed)
 
-if( size(aed, 2) ~= 3 ); error('expected Nx3 vector'); end
+% Interaural to spherical coordinates
+% 
+% lpd = sph2inter(aed)
+% 
+% aed is azimuth (deg), elevation (deg), distance (m), lpd is lateral
+% (deg), polar (deg), distance (m). Both are Nx3 matrices.
 
-xyz = sph2cartVect(aed);
-aedInter = cart2interVect(xyz);
+if( size(aed, 2) ~= 3 ); error('expected Nx3 matrix'); end
+
+xyz = dpq.coord.sph2cart(aed);
+lpd = dpq.coord.cart2inter(xyz);

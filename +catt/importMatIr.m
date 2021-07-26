@@ -1,9 +1,10 @@
 function [ir, fs] = importMatIr(filePath)
 
+% load CATT .MAT RIR file.
 %  
-% [ir, fs] = cattMatIrImport(filePath)
-% load CATT .MAT file, returns it as matrix (ir) along with its sampling
-% frequency (fs).
+% [ir, fs] = importMatIr(filePath)
+% 
+% ir is a matrix of irs, fs is the sampling frequency.
 
 % extract file name
 [~, fileName, ~] = fileparts(filePath);

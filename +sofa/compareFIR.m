@@ -1,6 +1,12 @@
 function [mse, sd] = compareFIR(sofaFirA, sofaFirB)
 
-% sofaPairwiseComp computes various metrics to compare two sofa FIRs
+% Computes various metrics for sofa FIR comparison
+% 
+% [mse, sd] = compareFIR(sofaFirA, sofaFirB)
+% 
+% sofaFirA and sofaFirB are sofa structures. mse is the mean square error,
+% sd the standard deviation.
+
 
 % sanity check
 if( sofaFirA.API.M ~= sofaFirB.API.M ); error('mismatch number of source positions'); end

@@ -33,8 +33,8 @@ case 'majdak'
 angleThresh = 45; % confusion angle threshold (in degree)
 
 % cartesian to interaural coordinates
-interTrue = cart2interVect( xyzTrue );
-interAnsw = cart2interVect( xyzAnsw );
+interTrue = dpq.coord.cart2inter( xyzTrue );
+interAnsw = dpq.coord.cart2inter( xyzAnsw );
 
 % precision
 polarError = abs( interTrue(:,2) - interAnsw(:,2) );
@@ -61,8 +61,8 @@ case 'parseihian'
 angleThresh = 45; % confusion angle threshold (in degree)
 
 % cartesian to interaural coordinates
-interTrue = cart2interVect( xyzTrue );
-interAnsw = cart2interVect( xyzAnsw );
+interTrue = dpq.coord.cart2inter( xyzTrue );
+interAnsw = dpq.coord.cart2inter( xyzAnsw );
 
 % precision
 selVectPR = abs( interTrue(:,2) - interAnsw(:,2) ) <= angleThresh;
@@ -123,8 +123,8 @@ case 'zagala'
 angleThresh = 45; % confusion angle threshold (in degree)
 
 % cartesian to interaural coordinates
-interTrue = cart2interVect( xyzTrue );
-interAnsw = cart2interVect( xyzAnsw );
+interTrue = dpq.coord.cart2inter( xyzTrue );
+interAnsw = dpq.coord.cart2inter( xyzAnsw );
 
 % precision
 selVectPR = abs( interTrue(:,2) - interAnsw(:,2) ) <= angleThresh;
@@ -182,14 +182,14 @@ angleThresh = 45; % confusion angle threshold (in degree)
 angleThresh2 = 20; % exclusion region angle (in degree)
 
 % cartesian to interaural / spherical coordinates
-interTrue = cart2interVect( xyzTrue );
-interAnsw = cart2interVect( xyzAnsw );
+interTrue = dpq.coord.cart2inter( xyzTrue );
+interAnsw = dpq.coord.cart2inter( xyzAnsw );
 %
-sphTrue = cart2sphVect( xyzTrue );
-sphAnsw = cart2sphVect( xyzAnsw );
+sphTrue = dpq.coord.cart2sph( xyzTrue );
+sphAnsw = dpq.coord.cart2sph( xyzAnsw );
 
 % great-cricle
-gc = getGreatCircleAngle(xyzTrue, xyzAnsw);
+gc = dpq.alet.getGreatCircleAngle(xyzTrue, xyzAnsw);
 
 % precision
 selVectPR = gc < angleThresh;
@@ -197,20 +197,20 @@ selVectPR = gc < angleThresh;
 % front-back
 selVectFB = ~ ( ( abs(interTrue(:,1)) > (90-angleThresh2) ) & ( abs(interTrue(:,1)) < (90+angleThresh2) ) ); % exclude equator
 selVectFB = selVectFB & sign(xyzTrue(:,1)) == -sign(xyzAnsw(:,1)); % opposite quadrants
-gcXsym = getGreatCircleAngle(xyzTrue, [-xyzAnsw(:,1) xyzAnsw(:,2:3)]);
+gcXsym = dpq.alet.getGreatCircleAngle(xyzTrue, [-xyzAnsw(:,1) xyzAnsw(:,2:3)]);
 selVectFB = selVectFB & gcXsym < angleThresh; % answer is indeed in "quadrant" opposed to target wrt x axis
 
 % up-down
 selVectUD = ( abs(sphTrue(:,2)) > angleThresh2 ); % exclude equator
 % selVectUD = ( abs(interTrue(:,2)) > angleThresh2 ); % exclude equator
 selVectUD = selVectUD & sign(xyzTrue(:,3)) == -sign(xyzAnsw(:,3)); % opposite quadrants
-gcZsym = getGreatCircleAngle(xyzTrue, [xyzAnsw(:,1:2) -xyzAnsw(:,3)]);
+gcZsym = dpq.alet.getGreatCircleAngle(xyzTrue, [xyzAnsw(:,1:2) -xyzAnsw(:,3)]);
 selVectUD = selVectUD & gcZsym < angleThresh; % answer is indeed in "quadrant" opposed to target wrt z axis
 
 % left-right
 selVectLR = ( abs(interTrue(:,1)) > angleThresh2 ) & ( abs(interTrue(:,1)) < (180-angleThresh2) ); % exclude equator
 selVectLR = selVectLR & sign(xyzTrue(:,2)) == -sign(xyzAnsw(:,2)); % opposite quadrants
-gcYsym = getGreatCircleAngle(xyzTrue, [xyzAnsw(:,1) -xyzAnsw(:,2) xyzAnsw(:,3)]);
+gcYsym = dpq.alet.getGreatCircleAngle(xyzTrue, [xyzAnsw(:,1) -xyzAnsw(:,2) xyzAnsw(:,3)]);
 selVectLR = selVectLR & gcYsym < angleThresh; % answer is indeed in "quadrant" opposed to target wrt y axis
 
 % precision confusions win over any other single confusion
@@ -383,7 +383,7 @@ interTrue = [ lat * ones(n,1), 360*rand(n,1) - 90, ones(n,1) ];
 interAnsw = [ lat * ones(n,1), 360*rand(n,1) - 90, ones(n,1) ];
 
 % compute conf type
-confType = getConfusionType(inter2cartVect(interTrue), inter2cartVect(interAnsw), 'zagala');
+confType = dpq.alet.getConfusionType(dpq.coord.inter2cart(interTrue), dpq.coord.inter2cart(interAnsw), 'zagala');
 
 % plot interaural spawn vs hit
 confTypeColors = [ 0.6 0.6 0.6; 1 0 0; 0 1 0; 0 0 1; 0 0 0];
@@ -399,6 +399,7 @@ ylabel('response polar angle (deg)');
 
 title(sprintf('lateral angle (deg): %d', lat));
 
+
 %% debug function: check confusions by types on 3D sphere
 
 % create fake positions
@@ -406,10 +407,10 @@ n = 100000;
 % interTrue = [ 180*rand(n,1) - 90, 360*rand(n,1) - 90, ones(n,1) ];
 % interTrue = repmat([45 45 1], n, 1);
 interTrue = repmat([45 0 1], n, 1);
-xyzTrue = inter2cartVect(interTrue);
+xyzTrue = dpq.coord.inter2cart(interTrue);
 
 interAnsw = [ 180*rand(n,1) - 90, 360*rand(n,1) - 90, ones(n,1) ];
-xyzAnsw = inter2cartVect( interAnsw );
+xyzAnsw = dpq.coord.inter2cart( interAnsw );
 
 % create confusion
 % xyzAnsw = [ -xyzTrue(:,1), xyzTrue(:,2), xyzTrue(:,3) ] % front-back
@@ -418,8 +419,8 @@ xyzAnsw = inter2cartVect( interAnsw );
 % xyzAnsw = [ -xyzTrue(:,1), -xyzTrue(:,2), -xyzTrue(:,3) ] % combined
 
 % compute conf type
-confType = getConfusionType(xyzTrue, xyzAnsw, 'zagala');
-% confType = getConfusionType(xyzTrue, xyzAnsw, 'poirier');
+confType = dpq.alet.getConfusionType(xyzTrue, xyzAnsw, 'zagala');
+% confType = dpq.alet.getConfusionType(xyzTrue, xyzAnsw, 'poirier');
 
 % plot interaural spawn vs hit
 confTypeColors = [ 0.6 0.6 0.6; 1 0 0; 0 1 0; 0 0 1; 0 0 0];
@@ -441,6 +442,7 @@ legend({'source', 'usr fwd'});
 
 title(sprintf('lateral angle (deg): %d', 60));
 
+
 %% debug: find confusions that do not make sense when flagged with parseihian's method
 
 % lateral
@@ -451,12 +453,12 @@ interAnsw = [-60 180 1];
 interTrue = [45 5  1; 10 0   1];
 interAnsw = [45 51 1; 95 0 1];
 
-xyzTrue = inter2cartVect( interTrue );
-xyzAnsw = inter2cartVect( interAnsw );
+xyzTrue = dpq.coord.inter2cart( interTrue );
+xyzAnsw = dpq.coord.inter2cart( interAnsw );
 
 % compute conf type
-% [confType, confTypeStr] = getConfusionType(xyzTrue, xyzAnsw, 'poirier'); 
-[confType, confTypeStr] = getConfusionType(xyzTrue, xyzAnsw, 'parseihian');
+% [confType, confTypeStr] = dpq.alet.getConfusionType(xyzTrue, xyzAnsw, 'poirier'); 
+[confType, confTypeStr] = dpq.alet.getConfusionType(xyzTrue, xyzAnsw, 'parseihian');
 
 % log
 for iConf = 1:length(confTypeStr)

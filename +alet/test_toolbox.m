@@ -9,7 +9,7 @@ load(filePath);
 s = test_data;
 
 % compute errors
-sTmp = getErrors(s.spawn, s.hit);
+sTmp = dpq.alet.getErrors(s.spawn, s.hit);
 fieldNames = fieldnames( sTmp );
 for iField = 1:length( fieldNames )
     s.(fieldNames{iField}) = sTmp.(fieldNames{iField});
@@ -34,8 +34,8 @@ xlabel('session id'); ylabel('gc error (deg)');
 %% compute space occupation 
 
 spawn = unique(s.spawn, 'rows');
-spawnSph = cart2sphVect(spawn);
-[cellAngles, cellShapeIndices] = getSphereVoronoiAngles(spawnSph);
+spawnSph = dpq.coord.cart2sph(spawn);
+[cellAngles, cellShapeIndices] = dpq.alet.getSphereVoronoiAngles(spawnSph);
 fprintf('sc_angle %.1f +/- %.1f \n', mean(cellAngles), std(cellAngles));
 fprintf('sc_index %.2f +/- %.2f \n', mean(cellShapeIndices), std(cellShapeIndices));
 

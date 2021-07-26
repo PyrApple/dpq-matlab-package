@@ -1,24 +1,16 @@
-function [sOut] = extractItd(sIn, nPointsBeforeOnsetHead, onsetThresh)
+function sOut = extractItd(sIn, nPointsBeforeOnset, onsetThresh)
 
-% sofaExtractItd return a time-aligned (threshold itd extraction) version
-% of input sofa struct
-%
-% Usage
-%   [sOut] = sofaExtractItd(sIn, nPointsHead, onsetThresh)
-%
-% Input
-%   sIn: sofa struct
-%   nPointsBeforeOnsetHead: number of points before first onset
-%   onsetThresh: first onset threshold value (linear, relative)
-%
-% Output
-%   sOut: sofa struct
-%
-% Authors
-%   David Poirier-Quinot
+% Return a time-aligned version of IR sofa struct. 
+% 
+% sOut = extractItd(sIn, nPointsBeforeOnset, onsetThresh)
+% 
+% The extracted ITD is stored in the sofa "Delay" field. ITD extraction is 
+% based on onset threshold (onsetThresh). nPointsBeforeOnset defines
+% the number of samples kept in the IR before onset threshold.
 
+% init arguments
 if( nargin < 2 ); onsetThresh = 1e-3; end
-if( nargin < 3 ); nPointsBeforeOnsetHead = 20; end
+if( nargin < 3 ); nPointsBeforeOnset = 20; end
 
 % skip if delay already extracted in Data.Delay field
 if( size(sIn.Data.Delay, 1) == size(sIn.Data.IR, 1) )
@@ -32,9 +24,9 @@ sOut = sIn;
 sOut.Data.Delay = zeros( size(sIn.Data.IR,1), size(sIn.Data.IR,2) );
 
 % get min num samples before onsetThresh in whole IR
-minDelayBeforeOnset = sofaGetMinFirstOnset(sOut, onsetThresh);
-if( minDelayBeforeOnset <= nPointsBeforeOnsetHead)
-    numSampPadding = nPointsBeforeOnsetHead - minDelayBeforeOnset + 1;
+minDelayBeforeOnset = dpq.sofa.getMinFirstOnset(sOut, onsetThresh);
+if( minDelayBeforeOnset <= nPointsBeforeOnset)
+    numSampPadding = nPointsBeforeOnset - minDelayBeforeOnset + 1;
     sOut.Data.IR = zeros(size(sOut.Data.IR, 1), size(sOut.Data.IR, 2), size(sOut.Data.IR, 3) + numSampPadding);
     warning('padding IR beginning with %ld zeros to match nPointsBeforeOnsetHead criteria (current min delay before onset is %ld samp)', numSampPadding, minDelayBeforeOnset);
     for iPos = 1:size(sOut.Data.IR,1)
@@ -53,7 +45,7 @@ for iCh = 1:size(sOut.Data.IR,2)
     delaySampTmp = firstOnset(ir, onsetThresh);
     
     % safety (few samples before)
-    delaySamp = delaySampTmp - nPointsBeforeOnsetHead;
+    delaySamp = delaySampTmp - nPointsBeforeOnset;
     
     % align IR and add delay to struct
     if( delaySamp > 0 )
@@ -74,3 +66,26 @@ end
 
 % update SOFA dimensions
 sOut = SOFAupdateDimensions(sOut);
+
+return 
+
+
+%% debug
+
+% load sofa 
+filePath = '/Users/pyrus/SharedData/HRTFs/listen_hrir_subset/raw/sofa/listen_irc_1008.sofa';
+s1 = SOFAload(filePath);
+
+% norm
+s2 = dpq.sofa.extractItd(s1, 10, 3e-2);
+
+% plot
+posId = 1;
+chId = 1;
+ir1 = squeeze(s1.Data.IR(posId, chId, :));
+ir2 = squeeze(s2.Data.IR(posId, chId, :));
+fs = s1.Data.SamplingRate;
+t1 = (0:(length(ir1)-1))/fs;
+subplot(211), plot(t1, ir1);
+t2 = (0:(length(ir2)-1))/fs;
+subplot(212), plot(t2, ir2);

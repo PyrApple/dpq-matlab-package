@@ -1,31 +1,14 @@
-function [sOut] = sphHarmInterp(sIn, gridStep)
+function sOut = interpolate(sIn, gridStep)
 
-% sofaInterpSphHarm return an interpolated version of input sofa struct
+% Spatial interpolation of sofa IRs based on spherical harmonics.
 %
-% Usage
-%   [sOut] = sofaInterpSphHarm(sIn, gridStep)
+% sOut = interpolate(sIn, gridStep)
 %
-% Input
-%   sIn: sofa struct
-%   gridStep: grid step, in degree, of the interpolation gride)
-%
-% Output
-%   sOut: sofa struct
-%
-% Authors
-%   David Poirier-Quinot
-
-% debug: define arguments to work in workspace (not function)
-% sIn = SOFAload('/Users/pyrus/Data/HRTFs/listen_hrir_subset/sofa/listen_irc_1008.sofa');
-% gridStep = 5;
-
-% debug: preprocessing that should have been done on sofa struct before
-% call to sofaInterpSphHarm
-% sIn = sofaExtractItd(sIn, 0, 50e-3);
+% gridStep is the space between interpolation grid points, in degrees
 
 
+% init arguments
 if( nargin < 2 ); gridStep = 5; end
-
 
 % sanitify check: input sofa is time aligned (itd moved to Delay sofa field)
 if( size(sIn.Data.Delay,1) ~= size(sIn.Data.IR, 1) )
@@ -65,7 +48,24 @@ sOut.Data.IR = permute(cat(3, hrirLeftInterp_m, hrirRightInterp_m), [1 3 2]);
 % sOut.Data.IR(:,1,:) = 
 
 % crop tail (added during interpolation) 
-sOut = sofaCrop(sOut);
+sOut = dpq.sofa.crop(sOut);
 
 % update sofa dimensions
 sOut = SOFAupdateDimensions(sOut);
+
+return 
+
+
+%% debug
+
+% load sofa 
+filePath = '/Users/pyrus/SharedData/HRTFs/listen_hrir_subset/raw/sofa/listen_irc_1008.sofa';
+sIn = SOFAload(filePath);
+
+% interpolate
+sOut = dpq.sofa.extractItd(sIn, 10, 5e-2);
+sOut = dpq.sofa.interpolate(sOut, 20);
+
+% debug: preprocessing that should have been done on sofa struct before
+% call to sofaInterpSphHarm
+% sIn = sofaExtractItd(sIn, 0, 50e-3);

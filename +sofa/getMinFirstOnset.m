@@ -1,23 +1,9 @@
 function [delaySamp] = getMinFirstOnset(sIn, onsetThresh)
 
-% sofaGetMinFirstOnset return the min number of samples before onsetThresh 
-% (rel value wrt sIn individual amplitudes) for all sofa file pos /
-% channels. used to know before using methods like sofaExtractItd if the
-% whole IR set requires a time offset to make sure nPointsHead variable
-% (see sofaExtractItd) is respected 
-%
-% Usage
-%   [minDelayInSamples] = sofaGetMinFirstOnset(sIn)
-%
-% Input
-%   sIn: sofa struct
-%
-% Output
-%   minDelayInSamples: minimum time between IR start and reach of
-%   onsetThreash, across all positions and channels
-%
-% Authors
-%   David Poirier-Quinot
+% Return the minimum duration between IR start and reach of onsetThresh, 
+% across all positions and channels.
+% 
+% [delaySamp] = getMinFirstOnset(sIn, onsetThresh)
 
 % init 
 delaySamp = Inf;

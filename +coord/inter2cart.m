@@ -1,9 +1,16 @@
-function [xyz] = inter2cartVect(aed)
+function xyz = inter2cart(lpd)
 
-if( size(aed, 2) ~= 3 ); error('expected Nx3 vector'); end
+% Interaural to cartesian coordinates
+% 
+% xyz = inter2cart(lpd)
+% 
+% lpd is lateral (deg), polar (deg), distance (m), xyz is cartesian
+% coordinates (m). Both are Nx3 matrices.
 
-xyz = nan(size(aed));
+if( size(lpd, 2) ~= 3 ); error('expected Nx3 matrix'); end
 
-xyz(:,1) = aed(:, 3) .* cosd( aed(:,1) ) .* cosd( aed(:,2) );
-xyz(:,2) = aed(:, 3) .* sind( aed(:,1) );
-xyz(:,3) = aed(:, 3) .* cosd( aed(:,1) ) .* sind( aed(:,2) );
+xyz = nan(size(lpd));
+
+xyz(:,1) = lpd(:, 3) .* cosd( lpd(:,1) ) .* cosd( lpd(:,2) );
+xyz(:,2) = lpd(:, 3) .* sind( lpd(:,1) );
+xyz(:,3) = lpd(:, 3) .* cosd( lpd(:,1) ) .* sind( lpd(:,2) );

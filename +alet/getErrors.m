@@ -10,8 +10,8 @@ if( size(spawn, 2) ~= 3 ); error('expected Nx3 vector'); end
 s = struct();
 
 % coordinate convert
-spawnInter = cart2interVect( spawn ); spawnSph = cart2sphVect( spawn );
-hitInter = cart2interVect( hit ); hitSph = cart2sphVect( hit );
+spawnInter = dpq.coord.cart2inter( spawn ); spawnSph = dpq.coord.cart2sph( spawn );
+hitInter = dpq.coord.cart2inter( hit ); hitSph = dpq.coord.cart2sph( hit );
 
 % interaural error
 errorInter = spawnInter(:,1:2) - hitInter(:,1:2);
@@ -52,10 +52,10 @@ s.errorSphSignedFolded = abs(hitSph(:,1:2)) - abs(spawnSph(:,1:2));
 
 % confusions
 confusion = struct(); confusionStr = struct();
-confusionMethods = getConfusionType();
+confusionMethods = dpq.alet.getConfusionType();
 for iMethod = 1:length(confusionMethods)
     method = confusionMethods{iMethod};
-    [typeId, typeStr] = getConfusionType( spawn, hit,method );
+    [typeId, typeStr] = dpq.alet.getConfusionType( spawn, hit,method );
     confusion.(method) = typeId;
     confusionStr.(method) = typeStr;
 end
@@ -64,7 +64,7 @@ s.confusionStr = confusionStr;
 % [s.confusionType, s.confusionTypeStr] = getConfusionType( spawn, hit, 'interaural' );
 
 % great circle error
-s.greatCircAngle = getGreatCircleAngle( spawn, hit );
+s.greatCircAngle = dpq.alet.getGreatCircleAngle( spawn, hit );
 
 % folded (based on confusions) hit error
 hitFolded = hit;
@@ -79,17 +79,17 @@ selVect = contains( confusionStr, 'front-back' );
 hitFolded( selVect, 1 ) = - hitFolded( selVect, 1 );
 %
 % compute folded interaural error 
-hitFoldedInter = cart2interVect( hitFolded );
-spawnInter = cart2interVect( spawn );
+hitFoldedInter = dpq.coord.cart2inter( hitFolded );
+spawnInter = dpq.coord.cart2inter( spawn );
 tmp = spawnInter(:,1:2) - hitFoldedInter(:,1:2);
 s.errorInterFolded = abs( wrapTo180(tmp ) );
 
 % compute sphere regions for spawned source
 region = struct(); regionStr = struct();
-regionMethods = getSphereRegions();
+regionMethods = dpq.alet.getSphereRegions();
 for iMethod = 1:length(regionMethods)
     method = regionMethods{iMethod};
-    [typeId, typeStr] = getSphereRegions( spawn, method );
+    [typeId, typeStr] = dpq.alet.getSphereRegions( spawn, method );
     region.(method) = typeId;
     regionStr.(method) = typeStr;
 end

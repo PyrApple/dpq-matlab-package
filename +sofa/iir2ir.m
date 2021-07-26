@@ -1,22 +1,14 @@
-function [sOut] = iir2ir(sIn, nfft)
+function sOut = iir2ir(sIn, nSamples)
 
-% convert IIR sofa to IR sofa
+% Convert sofa IIR to IR
 %
-% Usage
-%   [sOut] = sofaIIR2IR(sIn)
-%
-% Input
-%   sIn: sofa struct
-%
-% Output
-%   sOut: sofa struct
-%
-% Authors
-%   David Poirier-Quinot
+% sOut = iir2ir(sIn, nSamples)
+% 
+% nSamples is the length of the impulse response used in the conversion
 
 % init locals
-IR = nan( size(sIn.Data.IR,1), size(sIn.Data.IR,2), nfft);
-stimuli = zeros(nfft, 1);
+IR = nan( size(sIn.Data.IR,1), size(sIn.Data.IR,2), nSamples);
+stimuli = zeros(nSamples, 1);
 stimuli(1) = 1;
 
 % loop over positions

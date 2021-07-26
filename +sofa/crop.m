@@ -1,19 +1,12 @@
-function [sOut] = crop(sIn, onsetThresh)
+function sOut = crop(sIn, onsetThresh)
 
-% sofaCrop crop ir tail in sofa struct (based on rel. linear threshold value)
-%
-% Usage
-%   [sOut] = sofaCrop(sIn, thresh)
-%
-% Input
-%   sIn: sofa struct
-%   onsetThresh: last onset threshold value (linear, relative)
-%
-% Output
-%   sOut: sofa struct
-%
-% Authors
-%   David Poirier-Quinot
+% Crop IR tail in sofa struct based on relative (non-log) threshold value
+% 
+% sOut = crop(sIn, onsetThresh)
+% 
+% sIn and sOut are sofa structs. The IR is cropped from end to first sample
+% above onsetThresh.
+
 
 if( nargin < 2 ); onsetThresh = 1e-3; end
 
