@@ -9,7 +9,7 @@ function [region, regionStr] = getSphereRegions(xyz, flagMethod)
 
 % get list of available flag methods
 if( nargin == 0 )
-    region = {'leftright', 'fourfrontback'};
+    region = {'leftright', 'fourfrontback', 'ninemiddle'};
     return
 end
 
@@ -63,6 +63,45 @@ case 'fourfrontback'
     regionStr(region == 2) = {'front-down'};
     regionStr(region == 3) = {'back-down'};
 
+%% front-up, front-down, back-up, back-down
+
+case 'ninemiddle'
+    
+    % init local
+    % aed = dpq.coord.cart2sph(xyz);
+    xyzNorm = xyz./ repmat(sqrt(sum(xyz.^2, 2)), 1, 3);
+    
+    % define regions
+    o = sind(20);
+    selVectFront = xyzNorm(:, 1) >= o;
+    selVectBack = xyzNorm(:, 1) <= -o;
+    selVectUp = xyzNorm(:, 3) >= o;
+    selVectDown = xyzNorm(:, 3) <= -o;
+    
+    % output id of region type
+    region = nan(size(xyz, 1), 1);
+    region(selVectFront & selVectUp) = 0;
+    region(selVectFront & ~(selVectUp | selVectDown)) = 1;
+    region(selVectFront & selVectDown) = 2;
+    region( ~(selVectFront | selVectBack) & selVectUp ) = 3;
+    region( ~(selVectFront | selVectBack | selVectUp | selVectDown) ) = 4;
+    region( ~(selVectFront | selVectBack) & selVectDown ) = 5;
+    region(selVectBack & selVectUp) = 6;
+    region(selVectBack & ~(selVectUp | selVectDown)) = 7;
+    region(selVectBack & selVectDown) = 8;
+    
+    % output strings of zone type
+    regionStr = cell(size(region));
+    regionStr(region == 0) = {'front-up'};
+    regionStr(region == 1) = {'front-mid'};
+    regionStr(region == 2) = {'front-down'};
+    regionStr(region == 3) = {'mid-up'};
+    regionStr(region == 4) = {'mid-lr'};
+    regionStr(region == 5) = {'mid-down'};
+    regionStr(region == 6) = {'back-up'};
+    regionStr(region == 7) = {'back-mid'};
+    regionStr(region == 8) = {'back-down'};
+    
 %% default is error
 
 otherwise
@@ -84,15 +123,16 @@ return
 % create fake positions
 n = 100000;
 inter = [ 180*rand(n,1) - 90, 360*rand(n,1) - 90, ones(n,1) ];
-aed = inter2sphVect(inter);
-xyz = inter2cartVect(inter);
+aed = dpq.coord.inter2sph(inter);
+xyz = dpq.coord.inter2cart(inter);
 
 % compute region type
-[region, regionStr] = getSphereRegions(xyz, 'leftright');
-[region, regionStr] = getSphereRegions(xyz, 'fourfrontback');
+% [region, regionStr] = dpq.alet.getSphereRegions(xyz, 'leftright');
+% [region, regionStr] = dpq.alet.getSphereRegions(xyz, 'fourfrontback');
+[region, regionStr] = dpq.alet.getSphereRegions(xyz, 'ninemiddle');
 
 % plot
-regionColors = [ 0.6 0.6 0.6; 1 0 0; 0 1 0; 0 0 1; 0 0 0];
+regionColors = [ 0.6 0.6 0.6; 1 0 0; 0 1 0; 0 0 1; 0 0 0; 1 1 0; 0 1 1; 1 0 1; .5 .5 1];
 cmap = regionColors(region+1,:);
 scatter(aed(:,1), aed(:,2), 5, cmap, 'filled');
 
@@ -110,16 +150,24 @@ ylabel('elev (deg)');
 % create fake positions
 n = 100000;
 aed = [ 360*rand(n,1) - 180, 180*rand(n,1) - 90, ones(n,1) ];
-xyz = sph2cartVect(aed);
+xyz = dpq.coord.sph2cart(aed);
 
 % compute region type
-% [region, regionStr] = getSphereRegions(xyz, 'leftright');
-[region, regionStr] = getSphereRegions(xyz, 'fourfrontback');
+% [region, regionStr] = dpq.alet.getSphereRegions(xyz, 'leftright');
+% [region, regionStr] = dpq.alet.getSphereRegions(xyz, 'fourfrontback');
+[region, regionStr] = dpq.alet.getSphereRegions(xyz, 'ninemiddle');
+
+% % debug: reduce data
+% selVect = region == 0;
+% sum(selVect)
+% regionStr = regionStr(selVect);
+% region = region(selVect);
+% xyz = xyz(selVect,:);
 
 % plot interaural spawn vs hit
-regionColors = [ 0.6 0.6 0.6; 1 0 0; 0 1 0; 0 0 1; 0 0 0];
+regionColors = [ 0.6 0.6 0.6; 1 0 0; 0 1 0; 0 0 1; 0 0 0; 1 1 0; 0 1 1; 1 0 1; .5 .5 1];
 cmap = regionColors(region+1,:);
-scatter3(xyz(:,1), xyz(:,2), xyz(:,3), 6, cmap, 'filled', 'HandleVisibility', 'off');
+scatter3(xyz(:,1), xyz(:,2), xyz(:,3), 20, cmap, 'filled', 'HandleVisibility', 'off');
 hold on,
 scatter3(1, 0, 0, 1000, [0 1 1], 'filled'); % user forward
 hold off
