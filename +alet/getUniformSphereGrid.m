@@ -53,20 +53,27 @@ function xyz = getUniformSphereGrid(n)
     
     %% debug
     
+    % % wrong grid
+    % lat = -90:4:90;
+    % pol = -180:5:180;
+    % latRep = repmat(lat, length(pol), 1); latRep = latRep(:);
+    % polRep = repmat(pol, length(lat), 1).'; polRep = polRep(:);
+    % inter = [latRep, polRep, ones(length(latRep), 1)];
+    % xyz = dpq.coord.inter2cart(inter);
+    
     % init
-    % n = 1550;
-    n = 111;
-    xyz = getUniformSphereGrid(n);
+    n = 1550;
+    xyz = dpq.alet.getUniformSphereGrid(n);
     
     % get min gc angle between points
-    gcVect = nan(n, 1);
-    for iPos = 1:n
+    gcVect = nan(size(xyz, 1), 1);
+    for iPos = 1:size(xyz, 1)
         % compare one to the rest of them
-        xyzA = repmat(xyz(iPos, :), n-1, 1);
+        xyzA = repmat(xyz(iPos, :), size(xyz, 1)-1, 1);
         xyzB = xyz; xyzB(iPos,:) = [];
 
         % get gc min value
-        gc = getGreatCircleAngle( xyzA, xyzB );
+        gc = dpq.alet.getGreatCircleAngle( xyzA, xyzB );
         gcVect(iPos) = min(gc);
     end
 
