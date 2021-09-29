@@ -97,3 +97,23 @@ s.region = region;
 s.regionStr = regionStr;
 
 
+return 
+
+
+%% debug
+
+% define pos
+spawnSph = [0 0 1; 0 -45 1];
+hitSph = [0 0 0; 0 -46 1];
+
+% coord convert
+spawn = dpq.coord.sph2cart(spawnSph);
+hit = dpq.coord.sph2cart(hitSph);
+
+% tested method
+s = dpq.alet.getErrors(spawn, hit);
+
+% plot
+s.errorInterSigned
+s.errorInterSignedFolded
+
