@@ -145,7 +145,7 @@ ylabel('elev (deg)');
 
 % title(sprintf('lateral angle (deg): %d', lat));
 
-%% debug function: check confusions by types on 3D sphere
+%% debug function: 3D plot regions
 
 % create fake positions
 n = 100000;
@@ -154,8 +154,8 @@ xyz = dpq.coord.sph2cart(aed);
 
 % compute region type
 % [region, regionStr] = dpq.alet.getSphereRegions(xyz, 'leftright');
-% [region, regionStr] = dpq.alet.getSphereRegions(xyz, 'fourfrontback');
-[region, regionStr] = dpq.alet.getSphereRegions(xyz, 'ninemiddle');
+[region, regionStr] = dpq.alet.getSphereRegions(xyz, 'fourfrontback');
+% [region, regionStr] = dpq.alet.getSphereRegions(xyz, 'ninemiddle');
 
 % % debug: reduce data
 % selVect = region == 0;
@@ -169,7 +169,7 @@ regionColors = [ 0.6 0.6 0.6; 1 0 0; 0 1 0; 0 0 1; 0 0 0; 1 1 0; 0 1 1; 1 0 1; .
 cmap = regionColors(region+1,:);
 scatter3(xyz(:,1), xyz(:,2), xyz(:,3), 20, cmap, 'filled', 'HandleVisibility', 'off');
 hold on,
-scatter3(1, 0, 0, 1000, [0 1 1], 'filled'); % user forward
+plot3(1.2, 0, 0, 'ok', 'MarkerSize', 30, 'MarkerFaceColor', [1 1 1], 'LineWidth', 2); % user forward
 hold off
 
 % format

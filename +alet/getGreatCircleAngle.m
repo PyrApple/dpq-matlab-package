@@ -32,10 +32,10 @@ xyzRef = dpq.coord.sph2cart( aedRef );
 gc = dpq.alet.getGreatCircleAngle(xyz, xyzRef);
 
 % plot difference
-cmap = parula;
+cmap = jet;
 cmapIds = floor( normalize(gc, 'range') * (size(cmap, 1)-1) ) + 1;
 scatter3(xyz(:,1), xyz(:,2), xyz(:,3), 40, cmap(cmapIds, :), 'filled');
 hold on
 scatter3(xyzRef(1,1), xyzRef(1,2), xyzRef(1,3), 500, [1 0 0], 'filled', 'MarkerEdgeColor', 'k', 'LineWidth', 2);
 hold off
-colorbar, axis equal, rotate3d on, grid on
+colormap(cmap), colorbar, axis equal, rotate3d on, grid on

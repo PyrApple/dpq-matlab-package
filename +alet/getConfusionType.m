@@ -383,12 +383,23 @@ interTrue = [ lat * ones(n,1), 360*rand(n,1) - 90, ones(n,1) ];
 interAnsw = [ lat * ones(n,1), 360*rand(n,1) - 90, ones(n,1) ];
 
 % compute conf type
-confType = dpq.alet.getConfusionType(dpq.coord.inter2cart(interTrue), dpq.coord.inter2cart(interAnsw), 'zagala');
+[confType, confTypeStr] = dpq.alet.getConfusionType(dpq.coord.inter2cart(interTrue), dpq.coord.inter2cart(interAnsw), 'zagala');
 
 % plot interaural spawn vs hit
 confTypeColors = [ 0.6 0.6 0.6; 1 0 0; 0 1 0; 0 0 1; 0 0 0];
 cmap = confTypeColors(confType+1,:);
-scatter(interTrue(:,2), interAnsw(:,2), 5, cmap, 'filled');
+scatter(interTrue(:,2), interAnsw(:,2), 5, cmap, 'filled', 'HandleVisibility', 'off');
+
+% legend
+[confId, id] = unique(confType);
+confStr = confTypeStr(id);
+hold on,
+for iConf = 1:length(confId)
+    scatter(0, 0, nan, confTypeColors(confId(iConf)+1,:), 'filled');
+    confTypeColors(confId(iConf)+1,:)
+end
+hold off,
+legend(confStr, 'Location', 'eastoutside');
 
 % format
 axis equal
@@ -405,8 +416,7 @@ title(sprintf('lateral angle (deg): %d', lat));
 % create fake positions
 n = 100000;
 % interTrue = [ 180*rand(n,1) - 90, 360*rand(n,1) - 90, ones(n,1) ];
-% interTrue = repmat([45 45 1], n, 1);
-interTrue = repmat([45 0 1], n, 1);
+interTrue = repmat([45 45 1.2], n, 1);
 xyzTrue = dpq.coord.inter2cart(interTrue);
 
 interAnsw = [ 180*rand(n,1) - 90, 360*rand(n,1) - 90, ones(n,1) ];
@@ -419,25 +429,36 @@ xyzAnsw = dpq.coord.inter2cart( interAnsw );
 % xyzAnsw = [ -xyzTrue(:,1), -xyzTrue(:,2), -xyzTrue(:,3) ] % combined
 
 % compute conf type
-confType = dpq.alet.getConfusionType(xyzTrue, xyzAnsw, 'zagala');
-% confType = dpq.alet.getConfusionType(xyzTrue, xyzAnsw, 'poirier');
+method = 'poirier';
+[confType, confTypeStr] = dpq.alet.getConfusionType(xyzTrue, xyzAnsw, method);
 
-% plot interaural spawn vs hit
-confTypeColors = [ 0.6 0.6 0.6; 1 0 0; 0 1 0; 0 0 1; 0 0 0];
+% plot 
+confTypeColors = [ 0.6 0.6 0.6; 1 0 0; 0 1 0; 0 0.6 1; 0 0 0];
 % gray: precision, red: front-back, green: up-down, blue: left-right, black: combined
-
 cmap = confTypeColors(confType+1,:);
-scatter3(xyzAnsw(:,1), xyzAnsw(:,2), xyzAnsw(:,3), 6, cmap, 'filled', 'HandleVisibility', 'off');
+scatter3(xyzAnsw(:,1), xyzAnsw(:,2), xyzAnsw(:,3), 20, cmap, 'filled', 'HandleVisibility', 'off');
 hold on, 
-scatter3(xyzTrue(:,1), xyzTrue(:,2), xyzTrue(:,3), 1000, [1 0 1], 'filled'); % source
-scatter3(1, 0, 0, 1000, [0 1 1], 'filled'); % user forward
+scatter3(xyzTrue(1,1), xyzTrue(1,2), xyzTrue(1,3), 1000, [1 1 1], 'filled', 'MarkerEdgeColor', 'k', 'LineWidth', 2); % source
+scatter3(1.2, 0, 0, 1000, 1*[1 0 0], 'filled', 'Marker', 'o', 'MarkerEdgeColor', 'k', 'LineWidth', 2); % user forward
+% line([0 1.2], [0 0], [0 0], 'Color', 'w', 'LineWidth', 10);
 hold off
 
+% legend
+[confId, id] = unique(confType);
+confStr = confTypeStr(id);
+hold on,
+for iConf = 1:length(confId)
+    scatter(0, 0, nan, confTypeColors(confId(iConf)+1,:), 'filled');
+    confTypeColors(confId(iConf)+1,:);
+end
+hold off,
+legend(confStr, 'Location', 'eastoutside');
+
 % format
-xlabel('x (+fwd)'); ylabel('y (+left)'); zlabel('z (+up)');
+% xlabel('x (+fwd)'); ylabel('y (+left)'); zlabel('z (+up)');
 axis equal, rotate3d on, grid on, 
 view([140 24]);
-legend({'source', 'usr fwd'});
+legend([{'source'; 'usr fwd'}; confStr]);
 % view([180 0]);
 
 title(sprintf('lateral angle (deg): %d', 60));
@@ -457,15 +478,14 @@ xyzTrue = dpq.coord.inter2cart( interTrue );
 xyzAnsw = dpq.coord.inter2cart( interAnsw );
 
 % compute conf type
-% [confType, confTypeStr] = dpq.alet.getConfusionType(xyzTrue, xyzAnsw, 'poirier'); 
-[confType, confTypeStr] = dpq.alet.getConfusionType(xyzTrue, xyzAnsw, 'parseihian');
+[confType, confTypeStr] = dpq.alet.getConfusionType(xyzTrue, xyzAnsw, 'poirier'); 
+% [confType, confTypeStr] = dpq.alet.getConfusionType(xyzTrue, xyzAnsw, 'zagala');
+% [confType, confTypeStr] = dpq.alet.getConfusionType(xyzTrue, xyzAnsw, 'parseihian');
 
 % log
 for iConf = 1:length(confTypeStr)
     fprintf('[%d, %d, %d] -> [%d %d %d]: %s \n', interTrue(iConf, :), interAnsw(iConf, :), confTypeStr{iConf});
 end
-
-return 
 
 % plot
 cmap = confTypeColors(confType+1,:);
