@@ -17,9 +17,9 @@ lpd(:,1) = asind( xyz(:,2) ./ lpd(:,3) );
 p = lpd(:,3) .* cosd( lpd(:,1) );
 lpd(:,2) = atan2d( p .* xyz(:,3), p .* xyz(:,1));
 
-% rewrap elev around [-90 270]
-selVect = lpd(:,2) < -90;
-lpd(selVect,2) = 360 + lpd(selVect,2);
+% % rewrap elev around [-90 270]
+% selVect = lpd(:,2) < -90;
+% lpd(selVect,2) = 360 + lpd(selVect,2);
 
 % deal with radius = 0 scenario
 selVect = lpd(:,3) == 0;
