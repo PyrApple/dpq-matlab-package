@@ -11,7 +11,7 @@ aed(:, 3) = ones(size(aed, 1), 1);
 xyz = dpq.coord.sph2cart(aed);
 
 % compute spherical voronoi
-[vertices_xyz, cells, voronoiboundary, cellAngles] = voronoisphere(xyz.');
+[vertices_xyz, cells, voronoiboundary, cellAngles] = dpq.alet.externals.voronoisphere(xyz.');
 vertices_xyz = vertices_xyz.';
 
 % rad 2 deg
