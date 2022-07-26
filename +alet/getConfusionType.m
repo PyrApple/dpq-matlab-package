@@ -9,9 +9,18 @@ function [confType, confTypeStr] = getConfusionType(xyzTrue, xyzAnsw, flagMethod
 
 % get list of available flag methods
 if( nargin == 0 )
-    confType = {'majdak', 'parseihian', 'zagala', 'poirier', 'poirier2', 'poirier2Reduced', 'poirier3', 'isoPolarSpread'};
+    % confType = {'majdak', 'parseihian', 'zagala', 'zagala_no_poles', 'zagala_polar_and_gc', 'zagala_no_updown', 'zagala_gc_only', 'poirier_cartesian_symetries', 'poirier', 'poirier_up_down', 'poirier_polar', 'poirier_isopolar'};
+    confType = {'majdak', 'zagala', 'zagala_no_poles', 'poirier'};
     return
 end
+
+
+% poirier -> poirier_cartesian_symetries
+% poirier2 -> poirier_up_down % same as in the paper but augmented with up down
+% poirier2Reduced -> poirier % the one published in intech
+% poirier3 -> poirier_polar % same as in the paper but using polar to define zones
+% isoPolarSpread -> poirier_isopolar % ...
+
 
 % sanity check
 if( ~isequal( size(xyzTrue), size(xyzAnsw) ) ); error('different input sizes'); end
@@ -122,13 +131,80 @@ case 'zagala'
     polDist = abs( interTrueSym(:, 2) - interAnsw(:,2) );
     s.up_down = ( polDist <= angleThresh ) | ( polDist >= (360-angleThresh) );
 
+    % precision confusions win over any other single confusion
+    s.front_back = s.front_back & ~s.precision;
+    s.up_down = s.up_down & ~s.precision;
+
+    % combined confusions are any non taken region or overlap between other confusions
+    s.combined = ~(s.precision | s.front_back | s.up_down);
+
+
+%% same as zagala but using lateral < angle thresh to discard confusions at the interaural coord. poles
+
+case 'zagala_no_poles'
+    
+    % init local 
+    s = struct('precision', [], 'front_back', [], 'up_down', [], 'combined', []);
+    angleThresh = 45; % confusion angle threshold (in degree)
+
+    % precision
+    polDist = abs( interTrue(:,2) - interAnsw(:,2) );
+    s.precision = ( polDist <= angleThresh ) | ( polDist >= (360-angleThresh) );
+   
+    % every confusion becomes a precision confusion near the poles (based
+    % on lateral angle), to avoid error inflation due to interaural pole
+    % compression
+    selVectNeutralLR = abs(interTrue(:,1)) > (90 - angleThresh/2) & abs(interTrue(:,1)) < (90 + angleThresh/2);
+    s.precision = s.precision | selVectNeutralLR;   
+
+    % front-back (within angleThresh polar distance from target symmetry with X axis)
+    interTrueSym = dpq.coord.cart2inter( [-xyzTrue(:,1) xyzTrue(:,2:3)] );
+    polDist = abs( interTrueSym(:, 2) - interAnsw(:,2) );
+    s.front_back = ( polDist <= angleThresh ) | ( polDist >= (360-angleThresh) );
+
+    % up-down (within angleThresh polar distance from target symmetry with Z axis)
+    interTrueSym = dpq.coord.cart2inter( [xyzTrue(:,1:2) -xyzTrue(:,3)] );
+    polDist = abs( interTrueSym(:, 2) - interAnsw(:,2) );
+    s.up_down = ( polDist <= angleThresh ) | ( polDist >= (360-angleThresh) );
+
     % % error near the center band becomes precision if not already flagged as up-down / front-back
     % selVectNeutralCenter = abs(interTrue(:,1)) < angleThresh/2;
-    % selVectPR = selVectPR | (selVectNeutralCenter & ~( selVectUD & selVectFB ) );
+    % s.precision = s.precision | (selVectNeutralCenter & ~( s.up_down & s.front_back ) );
 
-    % % error near the L/R poles becomes precision confusion if not already flagged as left-right
-    % selVectNeutralLR = abs(interTrue(:,1)) > (90 - angleThresh/2) & abs(interTrue(:,1)) < (90 + angleThresh/2);
-    % selVectPR = selVectPR | selVectNeutralLR;
+    % precision confusions win over any other single confusion
+    s.front_back = s.front_back & ~s.precision;
+    s.up_down = s.up_down & ~s.precision;
+
+    % combined confusions are any non taken region or overlap between other confusions
+    s.combined = ~(s.precision | s.front_back | s.up_down);
+
+
+%% same as zagala but using gc < angle thresh in addition to polar < angle thresh
+
+case 'zagala_polar_and_gc'
+    
+    % init local 
+    s = struct('precision', [], 'front_back', [], 'up_down', [], 'combined', []);
+    angleThresh = 45; % confusion angle threshold (in degree)
+
+    % precision
+    polDist = abs( interTrue(:,2) - interAnsw(:,2) );
+    s.precision = ( polDist <= angleThresh ) | ( polDist >= (360-angleThresh) );
+    
+    % add gc < angleThresh to precision (to partially avoid compression at
+    % the poles issues)
+    gc = dpq.alet.getGreatCircleAngle(xyzTrue, xyzAnsw);
+    s.precision = s.precision | gc < angleThresh;
+
+    % front-back (within angleThresh polar distance from target symmetry with X axis)
+    interTrueSym = dpq.coord.cart2inter( [-xyzTrue(:,1) xyzTrue(:,2:3)] );
+    polDist = abs( interTrueSym(:, 2) - interAnsw(:,2) );
+    s.front_back = ( polDist <= angleThresh ) | ( polDist >= (360-angleThresh) );
+
+    % up-down (within angleThresh polar distance from target symmetry with Z axis)
+    interTrueSym = dpq.coord.cart2inter( [xyzTrue(:,1:2) -xyzTrue(:,3)] );
+    polDist = abs( interTrueSym(:, 2) - interAnsw(:,2) );
+    s.up_down = ( polDist <= angleThresh ) | ( polDist >= (360-angleThresh) );
 
     % precision confusions win over any other single confusion
     s.front_back = s.front_back & ~s.precision;
@@ -141,7 +217,7 @@ case 'zagala'
     
 %% Same as Zagala, with only fb confusions
 
-case 'zagalaReduced'
+case 'zagala_no_updown'
     
     % init local 
     s = struct('precision', [], 'front_back', [], 'generalized', []);
@@ -161,11 +237,48 @@ case 'zagalaReduced'
 
     % combined confusions are any non taken region or overlap between other confusions
     s.generalized = ~(s.precision | s.front_back);
+   
+
+%% new proposed classification 
+% same as zagala but with precision confusion defined based on gc angle
+
+case 'zagala_gc_only'
     
+    % init local 
+    % s = struct('precision', [], 'front_back', [], 'up_down', [], 'combined', []);
+    s = struct('precision', [], 'front_back', [], 'combined', []);
+    angleThresh = 45; % confusion angle threshold (in degree)
+
+    % great-cricle
+    gc = dpq.alet.getGreatCircleAngle(xyzTrue, xyzAnsw);
+
+    % precision (within angleThresh gc distance from target)
+    s.precision = gc < angleThresh;
+
+    % front-back (within angleThresh polar distance from target symmetry with X axis)
+    interTrueSym = dpq.coord.cart2inter( [-xyzTrue(:,1) xyzTrue(:,2:3)] );
+    polDist = abs( interTrueSym(:, 2) - interAnsw(:,2) );
+    s.front_back = ( polDist <= angleThresh ) | ( polDist >= (360-angleThresh) );
+
+    % % up-down (within angleThresh polar distance from target symmetry with Z axis)
+    % interTrueSym = dpq.coord.cart2inter( [xyzTrue(:,1:2) -xyzTrue(:,3)] );
+    % polDist = abs( interTrueSym(:, 2) - interAnsw(:,2) );
+    % s.up_down = ( polDist <= angleThresh ) | ( polDist >= (360-angleThresh) );
+
+    % precision confusions win over any other single confusion
+    s.front_back = s.front_back & ~s.precision;
+    % s.up_down = s.up_down & ~s.precision;
+
+    % combined confusions are any non taken region or overlap between other confusions
+    % s.combined = ~(s.precision | s.front_back | s.up_down);
+    s.combined = ~(s.precision | s.front_back);
+
 
 %% New proposed method, based on great-circle angle regions
+% using symetry wrt cartesian planes (XoY, YoZ, ZoX) to define confusion 
+% types  
 
-case 'poirier'
+case 'poirier_cartesian_symetries'
     
     % init local 
     s = struct('precision', [], 'front_back', [], 'up_down', [], 'front_back_up_down', [], 'left_right', [], 'undetermined', []);
@@ -204,7 +317,39 @@ case 'poirier'
 % mix between cone-of-confusion and quadrant, trying to make a parseihian 
 % that feels ok on the whole sphere
 
-case 'poirier2'
+case 'poirier'
+    
+    % init local 
+    s = struct('precision', [], 'front_back', [], 'in_cone', [], 'off_cone', []);
+
+    % init thresholds
+    angleThresh = 45; % confusion angle threshold (in degree)
+
+    % great-cricle
+    gc = dpq.alet.getGreatCircleAngle(xyzTrue, xyzAnsw);
+
+    % precision (within angleThresh gc distance from target)
+    s.precision = gc < angleThresh;
+
+    % front-back (within angleThresh gc distance from target symmetry with X axis)
+    s.front_back = dpq.alet.getGreatCircleAngle(xyzTrue, [-xyzAnsw(:,1) xyzAnsw(:,2:3)]) < angleThresh;
+    
+    % generalised-confusion (remainder of cone of confusion)
+    s.in_cone = abs(interTrue(:, 1) - interAnsw(:, 1)) < angleThresh;
+
+    % define priorities
+    s.front_back = s.front_back & ~s.precision; % precision confusion wins over fb
+    s.in_cone = s.in_cone & ~(s.front_back | s.precision); % remainder of the cone of confusion
+
+    % off-cone confusions are any non taken region
+    s.off_cone = ~(s.precision | s.front_back | s.in_cone);
+
+
+%% same as poirier but with up-down and front-back-up-down confusions added
+% mix between cone-of-confusion and quadrant, trying to make a parseihian 
+% that feels ok on the whole sphere
+
+case 'poirier_up_down'
     
     % init local 
     s = struct('precision', [], 'front_back', [], 'up_down', [], 'front_back_up_down', [], 'generalised_confusion', [], 'off_cone', []);
@@ -239,44 +384,12 @@ case 'poirier2'
     % off-cone confusions are any non taken region
     s.off_cone = ~(s.precision | s.front_back | s.up_down | s.front_back_up_down | s.generalised_confusion);
 
-
-%% same as poirier2 without up and fbud confusions
-% mix between cone-of-confusion and quadrant, trying to make a parseihian 
-% that feels ok on the whole sphere
-
-case 'poirier2Reduced'
-    
-    % init local 
-    s = struct('precision', [], 'front_back', [], 'in_cone', [], 'off_cone', []);
-
-    % init thresholds
-    angleThresh = 45; % confusion angle threshold (in degree)
-
-    % great-cricle
-    gc = dpq.alet.getGreatCircleAngle(xyzTrue, xyzAnsw);
-
-    % precision (within angleThresh gc distance from target)
-    s.precision = gc < angleThresh;
-
-    % front-back (within angleThresh gc distance from target symmetry with X axis)
-    s.front_back = dpq.alet.getGreatCircleAngle(xyzTrue, [-xyzAnsw(:,1) xyzAnsw(:,2:3)]) < angleThresh;
-    
-    % generalised-confusion (remainder of cone of confusion)
-    s.in_cone = abs(interTrue(:, 1) - interAnsw(:, 1)) < angleThresh;
-
-    % define priorities
-    s.front_back = s.front_back & ~s.precision; % precision confusion wins over fb
-    s.in_cone = s.in_cone & ~(s.front_back | s.precision); % remainder of the cone of confusion
-
-    % off-cone confusions are any non taken region
-    s.off_cone = ~(s.precision | s.front_back | s.in_cone);
-
     
 %% new proposed classification
-% same as poirier3 but with polar/lateral angle to define zones limits
+% same as poirier but with polar/lateral angle to define zones limits
 % rather than gc angle
 
-case 'poirier3'
+case 'poirier_polar'
     
     % init local 
     s = struct('precision', [], 'front_back', [], 'up_down', [], 'front_back_up_down', [], 'generalised_confusion', [], 'off_cone', []);
@@ -308,47 +421,11 @@ case 'poirier3'
     s.up_down = s.up_down & ~(s.precision | s.front_back); % precision and fb confusion win over ud. fb > ud is arbitrary choice.
     s.front_back_up_down = s.front_back_up_down & ~(s.front_back | s.up_down | s.precision); % pr, fb and ud confusions win over combined ud-fb
 
-
-    
-%% new proposed classification 
-% same as zagala but with precision confusion defined based on gc angle
-
-case 'zagala2'
-    
-    % init local 
-    % s = struct('precision', [], 'front_back', [], 'up_down', [], 'combined', []);
-    s = struct('precision', [], 'front_back', [], 'combined', []);
-    angleThresh = 45; % confusion angle threshold (in degree)
-
-    % great-cricle
-    gc = dpq.alet.getGreatCircleAngle(xyzTrue, xyzAnsw);
-
-    % precision (within angleThresh gc distance from target)
-    s.precision = gc < angleThresh;
-
-    % front-back (within angleThresh polar distance from target symmetry with X axis)
-    interTrueSym = dpq.coord.cart2inter( [-xyzTrue(:,1) xyzTrue(:,2:3)] );
-    polDist = abs( interTrueSym(:, 2) - interAnsw(:,2) );
-    s.front_back = ( polDist <= angleThresh ) | ( polDist >= (360-angleThresh) );
-
-%     % up-down (within angleThresh polar distance from target symmetry with Z axis)
-%     interTrueSym = dpq.coord.cart2inter( [xyzTrue(:,1:2) -xyzTrue(:,3)] );
-%     polDist = abs( interTrueSym(:, 2) - interAnsw(:,2) );
-%     s.up_down = ( polDist <= angleThresh ) | ( polDist >= (360-angleThresh) );
-
-    % precision confusions win over any other single confusion
-    s.front_back = s.front_back & ~s.precision;
-%     s.up_down = s.up_down & ~s.precision;
-
-    % combined confusions are any non taken region or overlap between other confusions
-    % s.combined = ~(s.precision | s.front_back | s.up_down);
-    s.combined = ~(s.precision | s.front_back);
-    
     
 %% new proposed classification 
 % same as zagala but solving problem at poles (using patches that grow in polar ange to keep a constant gc value)
 
-case 'isoPolarSpread'
+case 'poirier_isopolar'
     
     % init local 
     s = struct('precision', [], 'front_back', [], 'in_cone', [], 'off_cone', []);
@@ -473,7 +550,7 @@ n = 100000;
 % interAnsw = [ -180*rand(n,1), 180*rand(n,1), ones(n,1) ];
 
 % iso-lateral angle (cleaner 2D plot)
-lat = 0;
+lat = 30;
 % lat = 30;
 % lat = 60;
 % interTrue = [ lat * ones(n,1), 360*rand(n,1) - 90, ones(n,1) ];
@@ -487,7 +564,7 @@ interTrue(:, 2) = interTrue(:, 2) + 90;
 interAnsw(:, 2) = interAnsw(:, 2) + 90;
 
 % compute conf type
-% method = 'poirier2Reduced';
+% {'majdak', 'parseihian', 'zagala', 'zagala_no_poles', 'zagala_polar_and_gc', 'zagala_no_updown', 'zagala_gc_only', 'poirier_cartesian_symetries', 'poirier', 'poirier_up_down', 'poirier_polar', 'poirier_isopolar'}
 method = 'zagala';
 [confType, confTypeStr] = dpq.alet.getConfusionType(dpq.coord.inter2cart(interTrue), dpq.coord.inter2cart(interAnsw), method);
 
@@ -536,7 +613,7 @@ title(sprintf('lateral angle (deg): %d', lat));
 % create fake positions
 n = 40000;
 % interTrue = [ 180*rand(n,1) - 90, 360*rand(n,1) - 90, ones(n,1) ];
-aedTrue = repmat([30 15 1.2], n, 1);
+aedTrue = repmat([45.1 + 45/2 0 1.2], n, 1);
 % aedTrue = repmat([30 15 1.2], n, 1);
 % aedTrue = repmat([60 45 1.2], n, 1);
 xyzTrue = dpq.coord.sph2cart(aedTrue);
@@ -552,8 +629,8 @@ aedAnsw = dpq.coord.inter2sph( interAnsw );
 % xyzAnsw = [ -xyzTrue(:,1), -xyzTrue(:,2), -xyzTrue(:,3) ] % combined
 
 % compute conf type
-method = 'poirier2'; % {'majdak', 'parseihian', 'zagala', 'poirier', 'poirier2', 'poirier2Reduced', 'isoPolarSpread'};
-% method = 'zagala';
+% {'majdak', 'parseihian', 'zagala', 'zagala_no_poles', 'zagala_polar_and_gc', 'zagala_no_updown', 'zagala_gc_only', 'poirier_cartesian_symetries', 'poirier', 'poirier_up_down', 'poirier_polar', 'poirier_isopolar'}
+method = 'poirier';
 [confType, confTypeStr] = dpq.alet.getConfusionType(xyzTrue, xyzAnsw, method);
 
 % init plot
