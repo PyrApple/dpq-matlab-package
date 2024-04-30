@@ -9,18 +9,10 @@ function [confType, confTypeStr] = getConfusionType(xyzTrue, xyzAnsw, flagMethod
 
 % get list of available flag methods
 if( nargin == 0 )
-    % confType = {'majdak', 'parseihian', 'zagala', 'zagala_no_poles', 'zagala_polar_and_gc', 'zagala_no_updown', 'zagala_gc_only', 'poirier_cartesian_symetries', 'poirier', 'poirier_up_down', 'poirier_polar', 'poirier_isopolar'};
-    confType = {'majdak', 'zagala', 'zagala_no_poles', 'poirier'};
+    % confType = {'majdak', 'parseihian', 'katz', 'katz_no_poles', 'katz_polar_and_gc', 'katz_no_updown', 'katz_gc_only', 'poirier_cartesian_symetries', 'poirier', 'poirier_up_down', 'poirier_polar', 'poirier_isopolar'};
+    confType = {'majdak', 'katz', 'katz_no_poles', 'poirier'};
     return
 end
-
-
-% poirier -> poirier_cartesian_symetries
-% poirier2 -> poirier_up_down % same as in the paper but augmented with up down
-% poirier2Reduced -> poirier % the one published in intech
-% poirier3 -> poirier_polar % same as in the paper but using polar to define zones
-% isoPolarSpread -> poirier_isopolar % ...
-
 
 % sanity check
 if( ~isequal( size(xyzTrue), size(xyzAnsw) ) ); error('different input sizes'); end
@@ -111,7 +103,7 @@ case 'parseihian'
 % methods." The Journal of the Acoustical Society of America 147.5 (2020): 
 % 3376-3389.
 
-case 'zagala'
+case 'katz'
     
     % init local 
     s = struct('precision', [], 'front_back', [], 'up_down', [], 'combined', []);
@@ -139,9 +131,9 @@ case 'zagala'
     s.combined = ~(s.precision | s.front_back | s.up_down);
 
 
-%% same as zagala but using lateral < angle thresh to discard confusions at the interaural coord. poles
+%% same as katz but using lateral < angle thresh to discard confusions at the interaural coord. poles
 
-case 'zagala_no_poles'
+case 'katz_no_poles'
     
     % init local 
     s = struct('precision', [], 'front_back', [], 'up_down', [], 'combined', []);
@@ -179,9 +171,9 @@ case 'zagala_no_poles'
     s.combined = ~(s.precision | s.front_back | s.up_down);
 
 
-%% same as zagala but using gc < angle thresh in addition to polar < angle thresh
+%% same as katz but using gc < angle thresh in addition to polar < angle thresh
 
-case 'zagala_polar_and_gc'
+case 'katz_polar_and_gc'
     
     % init local 
     s = struct('precision', [], 'front_back', [], 'up_down', [], 'combined', []);
@@ -215,9 +207,9 @@ case 'zagala_polar_and_gc'
     s.combined = ~(s.precision | s.front_back | s.up_down);
 
     
-%% Same as Zagala, with only fb confusions
+%% Same as katz, with only fb confusions
 
-case 'zagala_no_updown'
+case 'katz_no_updown'
     
     % init local 
     s = struct('precision', [], 'front_back', [], 'generalized', []);
@@ -240,9 +232,9 @@ case 'zagala_no_updown'
    
 
 %% new proposed classification 
-% same as zagala but with precision confusion defined based on gc angle
+% same as katz but with precision confusion defined based on gc angle
 
-case 'zagala_gc_only'
+case 'katz_gc_only'
     
     % init local 
     % s = struct('precision', [], 'front_back', [], 'up_down', [], 'combined', []);
@@ -313,9 +305,24 @@ case 'poirier_cartesian_symetries'
     s.undetermined = ~(s.precision | s.front_back | s.up_down | s.left_right | s.front_back_up_down);
 
 
-%% new proposed classification
+%% new proposed classification (the one published in 2022 Intech chapter)
 % mix between cone-of-confusion and quadrant, trying to make a parseihian 
 % that feels ok on the whole sphere
+%
+% how to use:
+% 
+% is it
+%     - precision
+%     - in-cone
+%     - off cone
+% 
+% if its in-cone
+%     - is it front-back or not
+% 
+% if it's off-cone
+%     - check why, make sure you understand, otherwise there is a critical problem in the experiment
+% 
+% -> avoid biasing the analysis by saying that "this has an impact on front-back confusions" while one of your confusion just redistributed those confusions from in-cone vs. front-back
 
 case 'poirier'
     
@@ -423,7 +430,7 @@ case 'poirier_polar'
 
     
 %% new proposed classification 
-% same as zagala but solving problem at poles (using patches that grow in polar ange to keep a constant gc value)
+% same as katz but solving problem at poles (using patches that grow in polar ange to keep a constant gc value)
 
 case 'poirier_isopolar'
     
@@ -564,8 +571,8 @@ interTrue(:, 2) = interTrue(:, 2) + 90;
 interAnsw(:, 2) = interAnsw(:, 2) + 90;
 
 % compute conf type
-% {'majdak', 'parseihian', 'zagala', 'zagala_no_poles', 'zagala_polar_and_gc', 'zagala_no_updown', 'zagala_gc_only', 'poirier_cartesian_symetries', 'poirier', 'poirier_up_down', 'poirier_polar', 'poirier_isopolar'}
-method = 'zagala';
+% {'majdak', 'parseihian', 'katz', 'katz_no_poles', 'katz_polar_and_gc', 'katz_no_updown', 'katz_gc_only', 'poirier_cartesian_symetries', 'poirier', 'poirier_up_down', 'poirier_polar', 'poirier_isopolar'}
+method = 'katz';
 [confType, confTypeStr] = dpq.alet.getConfusionType(dpq.coord.inter2cart(interTrue), dpq.coord.inter2cart(interAnsw), method);
 
 % plot interaural spawn vs hit
@@ -629,7 +636,7 @@ aedAnsw = dpq.coord.inter2sph( interAnsw );
 % xyzAnsw = [ -xyzTrue(:,1), -xyzTrue(:,2), -xyzTrue(:,3) ] % combined
 
 % compute conf type
-% {'majdak', 'parseihian', 'zagala', 'zagala_no_poles', 'zagala_polar_and_gc', 'zagala_no_updown', 'zagala_gc_only', 'poirier_cartesian_symetries', 'poirier', 'poirier_up_down', 'poirier_polar', 'poirier_isopolar'}
+% {'majdak', 'parseihian', 'katz', 'katz_no_poles', 'katz_polar_and_gc', 'katz_no_updown', 'katz_gc_only', 'poirier_cartesian_symetries', 'poirier', 'poirier_up_down', 'poirier_polar', 'poirier_isopolar'}
 method = 'poirier';
 [confType, confTypeStr] = dpq.alet.getConfusionType(xyzTrue, xyzAnsw, method);
 
