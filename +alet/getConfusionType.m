@@ -45,10 +45,11 @@ case 'majdak'
     
     % init local 
     s = struct('precision', [], 'others', []);
-    angleThresh = 45; % confusion angle threshold (in degree)
+    angleThresh = 90; % confusion angle threshold (in degree)
 
     % precision
-    polarError = abs( interTrue(:,2) - interAnsw(:,2) );
+    polarError = interTrue(:,2) - interAnsw(:,2);
+    polarError = abs( wrapTo180( polarError ) );
     w = 0.5 * cosd( 2 * interTrue(:,1) ) + 0.5;
     s.precision = (w .* polarError) <= angleThresh;
 

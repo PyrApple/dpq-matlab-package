@@ -1,15 +1,20 @@
-function sOut = ir2fir(sIn)
+function sOut = ir2fir(sIn, nfft)
 
 % Convert sofa IR to FIR (time to freq domain)
 % 
-% sOut = ir2fir(sIn)
+% sOut = ir2fir(sIn, nfft)
 % 
-% sOut and sIn are sofa structures
+% sOut and sIn are sofa structures. nfft is optional
 
-% get ir final length
-irTmp = squeeze( sIn.Data.IR(1, 1, :) );
-fs = sIn.Data.SamplingRate;
-nfft = length( dpq.math.fft( irTmp, fs ) );
+% default args
+if( nargin < 2 )
+    % get ir final length
+    irTmp = squeeze( sIn.Data.IR(1, 1, :) );
+    fs = sIn.Data.SamplingRate;
+    nfft = length( dpq.math.fft( irTmp, fs ) );
+end
+
+
 
 % init ir
 IR = nan( size(sIn.Data.IR,1), size(sIn.Data.IR,2), nfft);
@@ -23,10 +28,8 @@ for iCh = 1:size(sIn.Data.IR, 2)
     % get ir
     ir = squeeze( sIn.Data.IR(iPos, iCh, :) );
     
-    % % get fir: ir to fir
-    % fir = abs(fft(ir, nfft*2)); 
-    % fir = fir(1:length(fir)/2);  
-    [fir, ~] = dpq.math.fft(ir, sIn.Data.SamplingRate);
+    % get fir: ir to fir
+    [fir, ~] = dpq.math.fft(ir, sIn.Data.SamplingRate, nfft);
     
     % store to locals
     IR(iPos, iCh, :) = fir;

@@ -154,8 +154,8 @@ xyz = dpq.coord.sph2cart(aed);
 
 % compute region type
 % [region, regionStr] = dpq.alet.getSphereRegions(xyz, 'leftright');
-[region, regionStr] = dpq.alet.getSphereRegions(xyz, 'fourfrontback');
-% [region, regionStr] = dpq.alet.getSphereRegions(xyz, 'ninemiddle');
+% [region, regionStr] = dpq.alet.getSphereRegions(xyz, 'fourfrontback');
+[region, regionStr] = dpq.alet.getSphereRegions(xyz, 'ninemiddle');
 
 % % debug: reduce data
 % selVect = region == 0;

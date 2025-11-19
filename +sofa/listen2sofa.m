@@ -21,6 +21,12 @@ s.GLOBAL_ListenerShortName = subjectId;
 s.GLOBAL_History = 'Converted from the LISTEN format';
 s.GLOBAL_DataType = l_hrir_S.type_s;
 
+% ensure pos are column vectors
+if( isrow(l_hrir_S.azim_v) )
+    l_hrir_S.azim_v = l_hrir_S.azim_v.';
+    l_hrir_S.elev_v= l_hrir_S.elev_v.';
+end
+
 % fill mandatory fields
 s.ListenerPosition = [0 0 0];
 s.ListenerView = [1 0 0];

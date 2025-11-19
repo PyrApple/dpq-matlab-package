@@ -46,7 +46,7 @@ confusion = struct(); confusionStr = struct();
 confusionMethods = dpq.alet.getConfusionType();
 for iMethod = 1:length(confusionMethods)
     method = confusionMethods{iMethod};
-    [typeId, typeStr] = dpq.alet.getConfusionType( spawn, hit,method );
+    [typeId, typeStr] = dpq.alet.getConfusionType( spawn, hit, method );
     confusion.(method) = typeId;
     confusionStr.(method) = typeStr;
 end

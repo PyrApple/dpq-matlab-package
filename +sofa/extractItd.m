@@ -13,7 +13,7 @@ if( nargin < 2 ); onsetThresh = 1e-3; end
 if( nargin < 3 ); requiredNumPointsBeforeOnset = 20; end
 
 % skip if delay already extracted in Data.Delay field
-if( size(sIn.Data.Delay, 1) == size(sIn.Data.IR, 1) )
+if( size(sIn.Data.Delay, 1) == size(sIn.Data.IR, 1) && ~isequal(sIn.Data.Delay, zeros(size(sIn.Data.Delay))))
     warning('hrir already aligned, itd alignement operation discarded \n');
     sOut = sIn;
     return
@@ -36,6 +36,9 @@ if( minDelayBeforeOnset <= requiredNumPointsBeforeOnset)
     end
 end
 
+% itd = itdestimator(permute(h(:,indHP,:),[2,3,1]),'fs',fs, 'MaxIACCe','lp','upper_cutfreq', 3000, 'butterpoly', 10)*1e3;
+% itd = itdestimator(Obj,'MaxIACCe');
+
 % loop over IR to extract delay values
 for iPos = 1:size(sOut.Data.IR,1)
 for iCh = 1:size(sOut.Data.IR,2)
@@ -43,7 +46,7 @@ for iCh = 1:size(sOut.Data.IR,2)
     % get IR delay
     ir = squeeze( sOut.Data.IR(iPos, iCh, :) );
     delaySampTmp = dpq.ir.firstOnset(ir, onsetThresh);
-    
+
     % safety (few samples before)
     delaySamp = delaySampTmp - requiredNumPointsBeforeOnset;
     

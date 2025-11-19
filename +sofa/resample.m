@@ -20,7 +20,7 @@ for iPos = 1:size(sIn.Data.IR, 1)
     for iCh = 1:size(sIn.Data.IR, 2)
         
         % resample
-        IR(iPos, iCh, :) = resample(sIn.Data.IR(iPos, iCh, :), fs, sIn.Data.SamplingRate);
+        IR(iPos, iCh, :) = resample(squeeze( sIn.Data.IR(iPos, iCh, :) ), fs, sIn.Data.SamplingRate);
         
     end
 end
