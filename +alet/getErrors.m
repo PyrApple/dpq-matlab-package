@@ -286,7 +286,8 @@ cmap = jet(180);
 % get cmap ids
 isRelCmap = true;
 if( isRelCmap )
-    cmapIds = floor( normalize(attrVect, 'range') * (size(cmap, 1)-1) ) + 1; % relative map
+    tmp = (attrVect - min(attrVect)) / (max(attrVect) - min(attrVect));
+    cmapIds = floor( tmp * (size(cmap, 1)-1) ) + 1; % relative map
 else 
     cmapIds = floor( attrVect/180 * (size(cmap, 1)-1) ) + 1; % absolute map
 end

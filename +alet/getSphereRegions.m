@@ -9,7 +9,7 @@ function [region, regionStr] = getSphereRegions(xyz, flagMethod)
 
 % get list of available flag methods
 if( nargin == 0 )
-    region = {'leftright', 'fourfrontback', 'ninemiddle'};
+    region = {'leftright', 'fourfrontback', 'ninemiddle', 'homogeneous10'};
     return
 end
 
@@ -101,6 +101,41 @@ case 'ninemiddle'
     regionStr(region == 6) = {'back-up'};
     regionStr(region == 7) = {'back-mid'};
     regionStr(region == 8) = {'back-down'};
+
+case 'homogeneous10'
+    
+    % init locals
+    xyzGrid = dpq.alet.getUniformSphereGrid(13);
+
+    % remove below certain elevation angle
+    aedGrid = dpq.coord.cart2sph(xyzGrid);
+    selVect = aedGrid(:, 2) < -45;
+    selVect = selVect | aedGrid(:, 2) > 60;
+    xyzGrid = xyzGrid(~selVect, :);
+    
+    % project xyz on sphere of radius 1
+    aed = dpq.coord.cart2sph(xyz);
+    aed(:, 3) = 1;
+    xyz = dpq.coord.sph2cart(aed);
+
+    % assign nearest neighbor indices
+    region = zeros(size(xyz, 1), 1);
+    for iPos = 1:size(xyz, 1)
+        
+        % nearest neighbor based on cart. distance
+        % dist = sum( sqrt((xyzGrid - xyz(iPos, :)).^2), 2 );
+        % [~, id] = min(dist);
+        
+        % nearest neighbor based on gc distance
+        gc = dpq.alet.getGreatCircleAngle(xyzGrid, repmat(xyz(iPos, :), size(xyzGrid, 1), 1));
+        [~, id] = min(gc);
+
+        region(iPos) = id-1;
+
+    end
+
+    regionStr = arrayfun(@num2str, region, 'UniformOutput', 0);
+
     
 %% default is error
 
@@ -121,19 +156,20 @@ return
 %% debug function: plot polar regions
 
 % create fake positions
-n = 100000;
-inter = [ 180*rand(n,1) - 90, 360*rand(n,1) - 90, ones(n,1) ];
-aed = dpq.coord.inter2sph(inter);
-xyz = dpq.coord.inter2cart(inter);
+n = 40000;
+xyz = rand(n, 3)-0.5; aed = dpq.coord.cart2sph(xyz); aed(:, 3) = 1; xyz = dpq.coord.sph2cart(aed);
+% inter = [ 180*rand(n,1) - 90, 360*rand(n,1) - 90, ones(n,1) ]; aed = dpq.coord.inter2sph(inter); xyz = dpq.coord.inter2cart(inter);
 
 % compute region type
 % [region, regionStr] = dpq.alet.getSphereRegions(xyz, 'leftright');
 % [region, regionStr] = dpq.alet.getSphereRegions(xyz, 'fourfrontback');
-[region, regionStr] = dpq.alet.getSphereRegions(xyz, 'ninemiddle');
+% [region, regionStr] = dpq.alet.getSphereRegions(xyz, 'ninemiddle');
+[region, regionStr] = dpq.alet.getSphereRegions(xyz, 'homogeneous10');
 
 % plot
-regionColors = [ 0.6 0.6 0.6; 1 0 0; 0 1 0; 0 0 1; 0 0 0; 1 1 0; 0 1 1; 1 0 1; .5 .5 1];
-cmap = regionColors(region+1,:);
+% regionColors = [ 0.6 0.6 0.6; 1 0 0; 0 1 0; 0 0 1; 0 0 0; 1 1 0; 0 1 1; 1 0 1; .5 .5 1];
+% cmap = regionColors(region+1,:);
+cmap = summer(max(region)+1); cmap = cmap(region+1);
 scatter(aed(:,1), aed(:,2), 5, cmap, 'filled');
 
 % format
@@ -149,13 +185,15 @@ ylabel('elev (deg)');
 
 % create fake positions
 n = 100000;
-aed = [ 360*rand(n,1) - 180, 180*rand(n,1) - 90, ones(n,1) ];
+xyz = rand(n, 3)-0.5; aed = dpq.coord.cart2sph(xyz); aed(:, 3) = 1;
+% aed = [ 360*rand(n,1) - 180, 180*rand(n,1) - 90, ones(n,1) ];
 xyz = dpq.coord.sph2cart(aed);
 
 % compute region type
 % [region, regionStr] = dpq.alet.getSphereRegions(xyz, 'leftright');
 % [region, regionStr] = dpq.alet.getSphereRegions(xyz, 'fourfrontback');
-[region, regionStr] = dpq.alet.getSphereRegions(xyz, 'ninemiddle');
+% [region, regionStr] = dpq.alet.getSphereRegions(xyz, 'ninemiddle');
+[region, regionStr] = dpq.alet.getSphereRegions(xyz, 'homogeneous10');
 
 % % debug: reduce data
 % selVect = region == 0;
@@ -165,8 +203,9 @@ xyz = dpq.coord.sph2cart(aed);
 % xyz = xyz(selVect,:);
 
 % plot interaural spawn vs hit
-regionColors = [ 0.6 0.6 0.6; 1 0 0; 0 1 0; 0 0 1; 0 0 0; 1 1 0; 0 1 1; 1 0 1; .5 .5 1];
-cmap = regionColors(region+1,:);
+% regionColors = [ 0.6 0.6 0.6; 1 0 0; 0 1 0; 0 0 1; 0 0 0; 1 1 0; 0 1 1; 1 0 1; .5 .5 1];
+% cmap = regionColors(region+1,:);
+cmap = summer(max(region)+1); cmap = cmap(region+1);
 scatter3(xyz(:,1), xyz(:,2), xyz(:,3), 20, cmap, 'filled', 'HandleVisibility', 'off');
 hold on,
 plot3(1.2, 0, 0, 'ok', 'MarkerSize', 30, 'MarkerFaceColor', [1 1 1], 'LineWidth', 2); % user forward

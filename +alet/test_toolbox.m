@@ -19,7 +19,7 @@ end
 %% exemple plot
 
 % compute stats
-[tmp_mean, tmp_meanci, tmp_gname] = grpstats(s.greatCircAngle, {s.session}, {'mean', 'meanci', 'gname'});
+[tmp_mean, tmp_meanci, tmp_gname] = grpstats(s.greatCircDistance, {s.session}, {'mean', 'meanci', 'gname'});
 session = cellfun(@(x) str2num(x), tmp_gname);
 
 % plot
